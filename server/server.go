@@ -5,14 +5,19 @@ import (
 	"net"
 )
 
+type Connections []*net.Conn
+
 type ServerManager struct {
 	Listener net.Listener
+	ConnList Connections
 	//ConnManager ConnectionManager
 }
 
 type ServerManagerInterface interface {
 	StartServer() error
 	CloseServer() error
+	AcceptConnection() error
+	HandleConnection(conn net.Conn) error
 }
 
 func (s *ServerManager) CreateServer() error {
@@ -41,6 +46,11 @@ func (s *ServerManager) AcceptConnection() error {
 			fmt.Printf("Error while connection: %v", err)
 			continue
 		}
-		go HandleConnection(conn)
+		go s.HandleConnection(&conn)
 	}
+}
+
+func (s *ServerManager) HandleConnection(conn *net.Conn) error {
+	s.ConnList = append(s.ConnList, conn)
+	return nil
 }
