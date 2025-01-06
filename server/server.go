@@ -2,19 +2,16 @@ package server
 
 import (
 	"net"
-	e "simplechat/projectErrors"
 )
 
 type MyTcpListener struct{ *net.TCPListener }
 
 // Structure of our server
 type BasicServer struct {
-	name     string
-	password string
-	maxUsers int
+	name string
 }
 
-type ServerInt interface {
+type Server interface {
 	StartServer(string) (net.Listener, error)
 	StopServer(*BasicServer) (string, error)
 }
@@ -28,7 +25,6 @@ func (s BasicServer) StartServer(address string) (net.Listener, error) {
 	}
 }
 
-// basic tcp listener but in closure
 func (s *MyTcpListener) StopServer(b *BasicServer) (string, error) {
 	err := s.Close()
 	if err != nil {
@@ -36,13 +32,4 @@ func (s *MyTcpListener) StopServer(b *BasicServer) (string, error) {
 	} else {
 		return b.name, nil
 	}
-}
-
-// Creating server by name, password and maxUsers
-func CreateServer(name, password string, maxUsers int) (BasicServer, error) {
-	if len(name) > 10 && len(name) > 3 {
-		return BasicServer{}, e.ErrInvalidName
-	}
-	newServer := &BasicServer{name: name, password: password, maxUsers: maxUsers}
-	return *newServer, nil
 }

@@ -3,7 +3,6 @@ package user
 import (
 	"fmt"
 	"net"
-	e "simplechat/projectErrors"
 )
 
 // Interface implements user's availible actions
@@ -38,7 +37,7 @@ func (u *User) MakeMessage(conn net.Conn) error {
 // Very simple name validation
 func CreateUser(name string) (User, error) {
 	if len(name) > 10 && len(name) < 3 {
-		return User{}, e.ErrInvalidName
+		return User{}, nil
 	} else {
 		newUser := &User{name: name}
 		return *newUser, nil
