@@ -1,35 +1,46 @@
 package server
 
 import (
+	"fmt"
 	"net"
 )
 
-type MyTcpListener struct{ *net.TCPListener }
-
-// Structure of our server
-type BasicServer struct {
-	name string
+type ServerManager struct {
+	Listener net.Listener
+	//ConnManager ConnectionManager
 }
 
-type Server interface {
-	StartServer(string) (net.Listener, error)
-	StopServer(*BasicServer) (string, error)
+type ServerManagerInterface interface {
+	StartServer() error
+	CloseServer() error
 }
 
-func (s BasicServer) StartServer(address string) (net.Listener, error) {
-	server, err := net.Listen("tcp", address)
+func (s *ServerManager) CreateServer() error {
+	newListener, err := net.Listen("tcp", "127.0.0.1:12345")
 	if err != nil {
-		return nil, err
-	} else {
-		return server, nil
+		return err
 	}
+	fmt.Println("Server succesfully created!")
+	s.Listener = newListener
+	return nil
 }
 
-func (s *MyTcpListener) StopServer(b *BasicServer) (string, error) {
-	err := s.Close()
+func (s *ServerManager) CloseServer() error {
+	err := s.Listener.Close()
 	if err != nil {
-		return b.name, err
-	} else {
-		return b.name, nil
+		return err
+	}
+	fmt.Println("Server succesfully created!")
+	return nil
+}
+
+func (s *ServerManager) AcceptConnection() error {
+	for {
+		conn, err := s.Listener.Accept()
+		if err != nil {
+			fmt.Printf("Error while connection: %v", err)
+			continue
+		}
+		go HandleConnection(conn)
 	}
 }
