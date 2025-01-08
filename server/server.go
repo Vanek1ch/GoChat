@@ -15,6 +15,7 @@ type ServerManager struct {
 	ConnList  Connections
 	ConnMutex sync.Mutex
 	ChManager *ChannelManager
+	CommaList []string
 	//ConnManager ConnectionManager
 }
 
@@ -22,16 +23,18 @@ type ServerManagerInterface interface {
 	StartServer() error
 	CloseServer() error
 	AcceptConnection() error
+	SendInstructions(conn net.Conn) error
 	HandleConnection(conn Connections) error
 }
 
 func (s *ServerManager) CreateServer() error {
-	newListener, err := net.Listen("tcp", "127.0.0.1:12345")
+	newListener, err := net.Listen("tcp", ":12345")
 	if err != nil {
 		return err
 	}
 	fmt.Println("Server succesfully created!")
 	s.Listener = newListener
+	s.AcceptConnection()
 	return nil
 }
 
@@ -61,6 +64,16 @@ func (s *ServerManager) AcceptConnection() error {
 	}
 }
 
+// Sending simple instructions to user.
+func (s *ServerManager) SendInstructions(conn net.Conn) error {
+	instructions := []byte("Welcome to GoChat ver 0.1;\n To start working type /help.")
+	_, err := conn.Write(instructions)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *ServerManager) HandleConnection(conn net.Conn) error {
 	defer func() {
 		conn.Close()
@@ -76,6 +89,11 @@ func (s *ServerManager) HandleConnection(conn net.Conn) error {
 	s.ConnList[conn] = conn.RemoteAddr().String()
 	s.ConnMutex.Unlock()
 
+	err := s.SendInstructions(conn)
+	if err != nil {
+		return err
+	}
+
 	buffer := make([]byte, 256)
 	for {
 		n, err := conn.Read(buffer)
@@ -90,6 +108,9 @@ func (s *ServerManager) HandleConnection(conn net.Conn) error {
 		}
 
 		switch {
+		case strings.HasPrefix(recievedData, "/help"):
+			// Need to make list of commands to use with %v.
+			conn.Write([]byte("Availible commands(/) are name, showch"))
 
 		// Case to change username.
 		case strings.HasPrefix(recievedData, "/name"):
